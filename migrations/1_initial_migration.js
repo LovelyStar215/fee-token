@@ -1,5 +1,5 @@
-const Migrations = artifacts.require("Migrations");
+const FeeToken = artifacts.require("FeeToken");
 
 module.exports = function (deployer) {
-  deployer.deploy(Migrations);
+  deployer.deploy(FeeToken);
 };

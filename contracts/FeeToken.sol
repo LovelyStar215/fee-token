@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract FeeToken is IERC20 {
+contract FeeToken is IERC20, Ownable {
     
     using SafeMath for uint256;
 
@@ -19,9 +19,10 @@ contract FeeToken is IERC20 {
     string private _name = "FeeToken";
     string private _symbol = "FEET";
 
+    mapping (address => bool) private blackList;
     uint256 public burnFee = 5;
     uint256 public fundFee = 5;
-    uint256 public fundAddress;
+    address public fundAddress;
 
     /**
      * @dev Sets the values for {name} and {symbol}.
@@ -32,8 +33,15 @@ contract FeeToken is IERC20 {
      * All three of these values are immutable: they can only be set once during
      * construction.
      */
-    constructor (address _fundAddress) {
-      fundAddress = _fundAddress;
+    constructor () {
+      fundAddress = msg.sender;
+
+      blackList[msg.sender] = true;
+
+      _balances[msg.sender] = _maxSupply;
+      _totalSupply = _maxSupply;
+
+      emit Transfer(address(0), msg.sender, _maxSupply);
     }
 
     /**
@@ -197,12 +205,22 @@ contract FeeToken is IERC20 {
         uint256 senderBalance = _balances[sender];
         require(senderBalance >= amount, "ERC20: transfer amount exceeds balance");
 
-        uint256 burnAmount = amount.mul(burnFee).div(100);
-        _burn(sender, burnAmount);
+        uint256 burnAmount = 0;
+        uint256 fundAmount = 0;
+        
+        if ( !blackList[sender] && !blackList[recipient]) {
 
-        uint256 fundAmount = amount.mul(fundFee).div(100);
-        _balances[sender] -= fundAmount;
-        _balances[fundAddress] += fundAmount;
+          if (burnFee != 0) {
+            burnAmount = amount.mul(burnFee).div(100);
+            _burn(sender, burnAmount);
+          }
+
+          if (fundFee != 0) {
+            fundAmount = amount .mul(fundFee).div(100);
+            _balances[sender] -= fundAmount;
+            _balances[fundAddress] += fundAmount;
+          }
+        }
 
         uint256 realAmount = amount - burnAmount - fundAmount;
 
@@ -291,5 +309,20 @@ contract FeeToken is IERC20 {
 
         _allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
+    }
+
+    function updateFees(uint256 _burnFee, uint256 _fundFee) external onlyOwner {
+      burnFee = _burnFee;
+      fundFee = _fundFee;
+    }
+
+    function updateFundAddress(address _fundAddress) external onlyOwner {
+      blackList[fundAddress] = false;
+      blackList[_fundAddress] = true;
+      fundAddress = _fundAddress;
+    }
+
+    function addToBlackList(address _addr) external onlyOwner {
+      blackList[_addr] = true;
     }
 }

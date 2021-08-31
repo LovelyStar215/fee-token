@@ -4,11 +4,11 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/math/Math.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./IStakingRewards.sol";
 import "./RewardsDistributionRecipient.sol";
 
@@ -41,7 +41,7 @@ contract StakingRewards is
     address _rewardsDistribution,
     address _rewardsToken,
     address _stakingToken
-  ) public {
+  ) {
     rewardsToken = IERC20(_rewardsToken);
     stakingToken = IERC20(_stakingToken);
     rewardsDistribution = _rewardsDistribution;
@@ -222,7 +222,6 @@ contract StakingRewardsFactory is Ownable {
     public stakingRewardsInfoByStakingToken;
 
   constructor(address _rewardsToken, uint256 _stakingRewardsGenesis)
-    public
     Ownable()
   {
     require(
